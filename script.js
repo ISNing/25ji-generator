@@ -341,6 +341,10 @@ window.onload = () => {
                         }
                         text3 = text3.replace(/gg/g, '󰁧g');
                         for (let [i, char] of [...text3].entries()) {
+                            if (char == ' ') {
+                                textX += 49.5;
+                                continue;
+                            }
                             let textElement = null;
                             if (i == 0) {
                                 let newChar = String.fromCharCode(char.charCodeAt(0) + 0xb000);
