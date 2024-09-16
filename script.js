@@ -76,6 +76,84 @@ overlay.addEventListener('click', (e) => {
     }
 });
 
+const createTextElement = (text, x, y, fontSize, fontFamily, fill, fontWeight = 'normal') => {
+    const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textElement.setAttribute('x', x);
+    textElement.setAttribute('y', y);
+    textElement.setAttribute('font-size', fontSize);
+    textElement.setAttribute('font-family', fontFamily);
+    textElement.setAttribute('font-weight', fontWeight);
+    textElement.setAttribute('fill', fill);
+    textElement.textContent = text;
+    return textElement;
+};
+
+const drawChar = (g, char, charX, charY, fontSize, fontFamily, fill, fontWeight = 'normal') => {
+    const textElement = createTextElement(char, charX, charY, fontSize, fontFamily, fill, fontWeight);
+    g.appendChild(textElement);
+    
+    return textElement;
+}
+
+const drawGradientChar = (g, char, charX, charY, fontSize, fontFamily, fontWeight = 'normal') => {
+    return drawChar(g, char, charX, charY, fontSize, fontFamily, 'url(#gradient)', fontWeight);
+};
+
+const getKerning = (font, char1, char2, size = 0) => {
+    const glyph1 = font.charToGlyph(char1);
+    const glyph2 = font.charToGlyph(char2);
+    if (!glyph1 || !glyph2) {
+        return 0;
+    }
+    const kerning = font.getKerningValue(glyph1, glyph2);
+    if (size > 0) {
+        const unitsPerEm = font.unitsPerEm;
+        return (kerning * size) / unitsPerEm;
+    } else {
+        return kerning;
+    }
+};
+
+const drawHikari = (g, fill, startX, startY, size = false) => {
+    let endX, endY, ctrlX, ctrlY;
+    if (size) {
+        endX = startX + 96;
+        endY = startY + 110;
+        ctrlX = startX + 53;
+        ctrlY = startY + 49;
+    } else {
+        endX = startX - 171;
+        endY = startY + 294;
+        ctrlX = startX - 88;
+        ctrlY = startY + 130;
+    }
+
+    const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    strokePath.setAttribute('d', `M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY} Q ${startX + endX - ctrlX} ${startY + endY - ctrlY} ${startX} ${startY}`);
+    strokePath.setAttribute('fill', 'black');
+    strokePath.setAttribute('stroke', 'black');
+    strokePath.setAttribute('stroke-width', '16');
+    eraseMask.appendChild(strokePath);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY} Q ${startX + endX - ctrlX} ${startY + endY - ctrlY} ${startX} ${startY}`);
+    path.setAttribute('fill', fill);
+    g.appendChild(path);
+};
+
+const drawTriangle = (g, fill, x1, y1, x2, y2, x3, y3) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M${x1},${y1} L${x2},${y2} L${x3},${y3} Z`);
+    path.setAttribute('fill', fill);
+    g.appendChild(path);
+};
+
+const drawSet = (paths) => {
+    paths.forEach(([func, ...args]) => {
+        func(...args);
+    });
+};
+
 window.onload = () => {
     fetch('kana.woff')
         .then((res) => res.arrayBuffer())
@@ -122,84 +200,6 @@ window.onload = () => {
                             bgRect.setAttribute('fill', colorPicker.value);
                             svg.appendChild(bgRect);
                         }
-
-                        const createTextElement = (text, x, y, fontSize, fontFamily, fill, fontWeight = 'normal') => {
-                            const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                            textElement.setAttribute('x', x);
-                            textElement.setAttribute('y', y);
-                            textElement.setAttribute('font-size', fontSize);
-                            textElement.setAttribute('font-family', fontFamily);
-                            textElement.setAttribute('font-weight', fontWeight);
-                            textElement.setAttribute('fill', fill);
-                            textElement.textContent = text;
-                            return textElement;
-                        };
-
-                        const drawChar = (g, char, charX, charY, fontSize, fontFamily, fill, fontWeight = 'normal') => {
-                            const textElement = createTextElement(char, charX, charY, fontSize, fontFamily, fill, fontWeight);
-                            g.appendChild(textElement);
-                            
-                            return textElement;
-                        }
-
-                        const drawGradientChar = (g, char, charX, charY, fontSize, fontFamily, fontWeight = 'normal') => {
-                            return drawChar(g, char, charX, charY, fontSize, fontFamily, 'url(#gradient)', fontWeight);
-                        };
-
-                        const getKerning = (font, char1, char2, size = 0) => {
-                            const glyph1 = font.charToGlyph(char1);
-                            const glyph2 = font.charToGlyph(char2);
-                            if (!glyph1 || !glyph2) {
-                                return 0;
-                            }
-                            const kerning = font.getKerningValue(glyph1, glyph2);
-                            if (size > 0) {
-                                const unitsPerEm = font.unitsPerEm;
-                                return (kerning * size) / unitsPerEm;
-                            } else {
-                                return kerning;
-                            }
-                        };
-
-                        const drawHikari = (g, fill, startX, startY, size = false) => {
-                            let endX, endY, ctrlX, ctrlY;
-                            if (size) {
-                                endX = startX + 96;
-                                endY = startY + 110;
-                                ctrlX = startX + 53;
-                                ctrlY = startY + 49;
-                            } else {
-                                endX = startX - 171;
-                                endY = startY + 294;
-                                ctrlX = startX - 88;
-                                ctrlY = startY + 130;
-                            }
-
-                            const strokePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            strokePath.setAttribute('d', `M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY} Q ${startX + endX - ctrlX} ${startY + endY - ctrlY} ${startX} ${startY}`);
-                            strokePath.setAttribute('fill', 'black');
-                            strokePath.setAttribute('stroke', 'black');
-                            strokePath.setAttribute('stroke-width', '16');
-                            eraseMask.appendChild(strokePath);
-
-                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            path.setAttribute('d', `M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY} Q ${startX + endX - ctrlX} ${startY + endY - ctrlY} ${startX} ${startY}`);
-                            path.setAttribute('fill', fill);
-                            g.appendChild(path);
-                        };
-
-                        const drawTriangle = (g, fill, x1, y1, x2, y2, x3, y3) => {
-                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                            path.setAttribute('d', `M${x1},${y1} L${x2},${y2} L${x3},${y3} Z`);
-                            path.setAttribute('fill', fill);
-                            g.appendChild(path);
-                        };
-
-                        const drawSet = (paths) => {
-                            paths.forEach(([func, ...args]) => {
-                                func(...args);
-                            });
-                        };
 
                         const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
                         gradient.setAttribute('id', 'gradient');
@@ -416,36 +416,38 @@ window.onload = () => {
                         ]);
 
                         svg.setAttribute('width', textX + 73);
-
-                        submitBtn.dataset.i18n = 'submit-btn-update';
-                        submitBtn.textContent = i18n.getText('submit-btn-update');
-
+                        
                         downloadBtn.removeAttribute('disabled');
-                        downloadBtn.addEventListener('click', () => {
-                            if (watermarkCheck.checked) {
-                                drawChar(svg, '焰', svg.getAttribute('width') - 205, 15, '17px', 'figure', 'rgba(0, 0, 0, 0.7)');
-                            }
-
-                            const serializer = new XMLSerializer();
-                            const svgString = serializer.serializeToString(svg);
-                            let session = new SvgTextToPath(svgString, {
-                                useFontFace: true,
-                            });
-                            let stat = session.replaceAll().then(() => {
-                                const svgString = session.getSvgString();
-                                const blob = new Blob([svgString], { type: 'image/svg+xml' });
-                                const url = URL.createObjectURL(blob);
-                                const img = new Image();
-                                img.src = url;
-                                popup.innerHTML = '<span id="close-btn">×</span>';
-                                popup.appendChild(img);
-                                overlay.style.display = 'flex';
-                            });
-                        });
-
-                        nightcord.style.cursor = 'pointer';
-                        nightcord.addEventListener('click', nightcordEvent);
                     };
+
+                    submitBtn.dataset.i18n = 'submit-btn-update';
+                    submitBtn.textContent = i18n.getText('submit-btn-update');
+
+                    downloadBtn.addEventListener('click', () => {
+                        const svg = canvasContainer.querySelector('svg');
+                        if (watermarkCheck.checked) {
+                            drawChar(svg, '焰', svg.getAttribute('width') - 205, 15, '17px', 'figure', 'rgba(0, 0, 0, 0.7)');
+                        }
+
+                        const serializer = new XMLSerializer();
+                        const svgString = serializer.serializeToString(svg);
+                        let session = new SvgTextToPath(svgString, {
+                            useFontFace: true,
+                        });
+                        session.replaceAll().then(() => {
+                            const svgString = session.getSvgString();
+                            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+                            const url = URL.createObjectURL(blob);
+                            const img = new Image();
+                            img.src = url;
+                            popup.innerHTML = '<span id="close-btn">×</span>';
+                            popup.appendChild(img);
+                            overlay.style.display = 'flex';
+                        });
+                    });
+
+                    nightcord.style.cursor = 'pointer';
+                    nightcord.addEventListener('click', nightcordEvent);
 
                     const submit = () => {
                         const text1 = text1Input.value;
